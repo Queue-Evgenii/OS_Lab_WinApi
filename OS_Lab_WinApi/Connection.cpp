@@ -15,7 +15,6 @@ BOOL InitWinSock(HWND& window, WSADATA& wsaData) {
 DWORD WINAPI NetworkThreadDelegate(LPVOID params) {
 	char* data_ref = ((PARAMETERS*)params)->sendingData;
 	HWND window = ((PARAMETERS*)params)->window;
-	MessageBoxA(NULL, data_ref, "Success", MB_OK | MB_ICONINFORMATION);
 
 	WSADATA wsaData;
 	SOCKADDR_IN addr;

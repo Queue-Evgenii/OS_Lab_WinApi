@@ -11,6 +11,6 @@ struct TextFields {
 };
 struct GeneratorParams
 {
-  char** strMatr;
+  char**& strMatr;
   TextFields fields;
 };

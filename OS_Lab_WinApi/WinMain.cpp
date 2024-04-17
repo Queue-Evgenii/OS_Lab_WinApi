@@ -59,11 +59,6 @@ LRESULT CALLBACK MainProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 		isServerEnabled = true;
 		break;
 	case WM_DESTROY:
-		for (int i = 0; i < CHARS_STR_COL_LEN; i++)
-			if (strMatr[i] != nullptr)
-				delete[]strMatr[i];
-		delete[]strMatr;
-		strMatr = NULL;
 		CloseApp();
 		break;
 	default:
@@ -101,6 +96,13 @@ void CloseSubThread() {
 }
 
 void CloseApp() {
+	if (strMatr != nullptr) {
+		for (int i = 0; i < CHARS_STR_COL_LEN; i++)
+			if (strMatr[i] != nullptr)
+				delete[]strMatr[i];
+		delete[]strMatr;
+		strMatr = NULL;
+	}
 	CloseSubThread();
 	CloseNetworkThread();
 	PostQuitMessage(0);

@@ -11,6 +11,7 @@ BOOL InitWinSock(HWND& window, WSADATA& wsaData) {
 
 DWORD WINAPI NetworkThreadDelegate(LPVOID params) {
   HWND& window = ((PARAMETERS*)params)->window;
+  char* data = ((PARAMETERS*)params)->receivingData;
   WSADATA wsaData;
   SOCKADDR_IN addr;
   SOCKET connectionSocket;
@@ -29,10 +30,11 @@ DWORD WINAPI NetworkThreadDelegate(LPVOID params) {
     SendMessage(window, WM_ERROR, 0, 0);
     return 1;
   }
-  char data[GEN_CHARS_STR_ROW_LEN * CHARS_STR_COL_LEN + 1];
+  data = new char[GEN_CHARS_STR_ROW_LEN * CHARS_STR_COL_LEN + 1];
   while (recv(connectionSocket, data, GEN_CHARS_STR_ROW_LEN * CHARS_STR_COL_LEN, NULL) == 0) {}
   data[GEN_CHARS_STR_ROW_LEN * CHARS_STR_COL_LEN] = '\0';
-  MessageBoxA(NULL, data, "Success", MB_ICONINFORMATION | MB_OK);
+
+  ProcessReceivedData(window, data);
 
   return 0;
 }
