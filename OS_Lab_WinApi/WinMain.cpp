@@ -8,6 +8,8 @@ char* str = NULL;
 HANDLE SubThread, NetworkThread;
 bool isServerEnabled = false;
 
+NOTIFYICONDATA nid;
+
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR args, int ncmdshow) {
 	WNDCLASS MainClass = NewWindowClass((HBRUSH)COLOR_WINDOW, LoadCursor(NULL, IDC_ARROW), LoadIcon(NULL, IDI_APPLICATION), L"MainClass", hInst, MainProcedure);
 
@@ -32,6 +34,7 @@ LRESULT CALLBACK MainProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 		AddMainMenu(hWnd);
 		AddStringGeneratorInterface(hWnd, DefaultCharStrTextBox, SortedCharStrTextBox);
 		AddTCPInterface(hWnd);
+		AddTrayIcon(hWnd, 1, LoadIcon(NULL, IDI_APPLICATION), L"Program icon in Tray");
 
 		break;
 	case WM_COMMAND:
@@ -97,9 +100,6 @@ void CloseSubThread() {
 
 void CloseApp() {
 	if (strMatr != nullptr) {
-		for (int i = 0; i < CHARS_STR_COL_LEN; i++)
-			if (strMatr[i] != nullptr)
-				delete[]strMatr[i];
 		delete[]strMatr;
 		strMatr = NULL;
 	}
@@ -112,8 +112,6 @@ void CreateCharSequences() {
 	if (SubThread != NULL) return;
 	
 	strMatr = new char*[CHARS_STR_COL_LEN];
-	for (int i = 0; i < CHARS_STR_COL_LEN; i++)
-		strMatr[i] = new char[GEN_CHARS_STR_ROW_LEN];
 
 	TextFields fields = { DefaultCharStrTextBox, SortedCharStrTextBox };
 	GeneratorParams params = { strMatr, fields };

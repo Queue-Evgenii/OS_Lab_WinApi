@@ -38,7 +38,7 @@ DWORD WINAPI NetworkThreadDelegate(LPVOID params) {
 	else {
 		send(clientSocket, data_ref, GEN_CHARS_STR_ROW_LEN * CHARS_STR_COL_LEN, NULL);
 	}
-
+	CloseNetworkThread();
 	return 0;
 }
 

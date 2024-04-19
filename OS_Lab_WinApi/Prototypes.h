@@ -18,3 +18,6 @@ void SetTextFromMatrix(int i, char* str, char** strMatr);
 
 DWORD WINAPI NetworkThreadDelegate(LPVOID);
 DWORD WINAPI SubThreadDelegate(LPVOID);
+
+void AddTrayIcon(HWND hWnd, UINT uID, HICON hIcon, LPCWSTR lpszTip);
+void RemoveTrayIcon(HWND hWnd, UINT uID);

@@ -1,6 +1,6 @@
 #include "Definitions.h"
 
-void AddMainMenu(HWND hWnd) {
+void AddMainInterface(HWND hWnd) {
 	HMENU RootMenu = CreateMenu();
 	HMENU SubMenuFile = CreateMenu();
 	HMENU SubMenuAbout = CreateMenu();
@@ -14,4 +14,8 @@ void AddMainMenu(HWND hWnd) {
 	AppendMenuW(RootMenu, MF_POPUP, (UINT_PTR)SubMenuAbout, L"About");
 
 	SetMenu(hWnd, RootMenu);
+}
+
+void AddTCPInterface(HWND hWnd) {
+	CreateWindowA("button", "Connect and fetch chars", WS_VISIBLE | WS_CHILD, 5, WND_HEIGHT - 90, WND_WIDTH - 30, 20, hWnd, (HMENU)ID_BUTTON_CREATE_CONNECTION, NULL, NULL);
 }

@@ -4,12 +4,12 @@
 
 int*(_cdecl* countCharInSequence)(char* str);
 int* count;
+char* maxOccurrencesChars;
 
 LRESULT CALLBACK MainProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp);
 WNDCLASS NewWindowClass(HBRUSH BGColor, HCURSOR Cursor, HICON Icon, LPCWSTR Name, HINSTANCE hInst, WNDPROC Procedure);
 
 HANDLE NetworkThread;
-bool isServerEnabled = false;
 char* str = nullptr;
 
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR args, int ncmdshow) {
@@ -40,8 +40,8 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR args, int ncmdsho
 	return 0;
 }
 
-void DrawGraph(HWND hWnd)
-{
+void DrawGraph(HWND hWnd) {
+	if (count == nullptr) return;
 	HDC hdc = GetDC(hWnd);
 
 	RECT clientRect;
@@ -61,12 +61,12 @@ void DrawGraph(HWND hWnd)
 	for (int i = 0; i < LENGTH_IN_ALPHABET / 2; ++i) {
 		wchar_t letter = L'A' + i;
 		wchar_t str[2] = { letter, L'\0' };
-		TextOut(hdc, i * scaleX + offset, zoneHeight + 10, str, 2);
+		TextOut(hdc, i * scaleX + offset - 5, zoneHeight + 10, str, 2);
 	}
 	for (int i = 0; i < LENGTH_IN_ALPHABET / 2; ++i) {
 		wchar_t letter = L'a' + i;
 		wchar_t str[2] = { letter, L'\0' };
-		TextOut(hdc, ((LENGTH_IN_ALPHABET / 2) + i) * scaleX + offset, zoneHeight + 10, str, 2);
+		TextOut(hdc, ((LENGTH_IN_ALPHABET / 2) + i) * scaleX + offset - 5, zoneHeight + 10, str, 2);
 	}
 
 	// Рисуем ось Y
@@ -84,13 +84,8 @@ void DrawGraph(HWND hWnd)
 		TextOut(hdc, offset - 10, (zoneHeight) - i * scaleY, valueText.c_str(), valueText.length());
 	}
 
-	// Подписи осей
-	TextOut(hdc, WND_WIDTH / 2 - 20, zoneHeight + 30, L"Index", 5);
-	TextOut(hdc, 10, WND_HEIGHT / 2 - 10, L"Value", 5);
-
 	// Рисуем график
-	for (int i = 0; i < LENGTH_IN_ALPHABET - 1; ++i)
-	{
+	for (int i = 0; i < LENGTH_IN_ALPHABET - 1; ++i) {
 		MoveToEx(hdc, i * scaleX + offset, zoneHeight - count[i] * scaleY, nullptr);
 		LineTo(hdc, (i + 1) * scaleX + offset, zoneHeight - count[i + 1] * scaleY);
 	}
@@ -98,22 +93,42 @@ void DrawGraph(HWND hWnd)
 	ReleaseDC(hWnd, hdc);
 }
 
+std::string RetrieveDataFromRegistry() {
+	HKEY hKey;
+	if (RegOpenKeyExA(HKEY_CURRENT_USER, "Software\\OS_Lab", 0, KEY_READ, &hKey) == ERROR_SUCCESS) {
+		char buffer[256];
+		DWORD bufferSize = sizeof(buffer);
+		if (RegQueryValueExA(hKey, "topFive", NULL, NULL, (LPBYTE)buffer, &bufferSize) == ERROR_SUCCESS) {
+			return std::string(buffer);
+		}
+		RegCloseKey(hKey);
+	}
+	return "Registry is empty";
+}
+
+void DeleteDataFromRegistry() {
+	RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\OS_Lab");
+}
 
 LRESULT CALLBACK MainProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 	PARAMETERS params = { hWnd, str };
 	PAINTSTRUCT ps;
-	RECT rect = { 20, 20, WND_WIDTH - 40, WND_HEIGHT - 160 };
 
 	switch (msg)
 	{
 	case WM_CREATE:
-		AddMainMenu(hWnd);
-		if (CreateConnection(hWnd, params)) break;
-		
-
+		AddMainInterface(hWnd);
+		AddTCPInterface(hWnd);
+		break;
+	case WM_KEYDOWN:
+		if (wp == 'H' && GetKeyState(VK_CONTROL) < 0) {
+			MessageBoxA(hWnd, (LPCSTR)RetrieveDataFromRegistry().c_str(), "Top five chars", MB_OK);
+		}
+		if (wp == 'P' && GetKeyState(VK_CONTROL) < 0) {
+			DeleteDataFromRegistry();
+		}
 		break;
 	case WM_PAINT:
-		if (count == nullptr) break;
 		BeginPaint(hWnd, &ps);
 
 		DrawGraph(hWnd);
@@ -127,6 +142,9 @@ LRESULT CALLBACK MainProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 			break;
 		case ID_ROOT_MENU_ITEM_PROJECT:
 			MessageBoxA(hWnd, "ITINF-22-2 Student`s Lab.\nSubject: Operating Systems\nEnvironment: C++/WinApi\nTCP/IP get application", "About Project", MB_OK);
+			break;
+		case ID_BUTTON_CREATE_CONNECTION:
+			CreateConnection(hWnd, params);
 			break;
 		case ID_ROOT_MENU_ITEM_EXIT:
 			PostQuitMessage(0);
@@ -158,8 +176,6 @@ WNDCLASS NewWindowClass(HBRUSH BGColor, HCURSOR Cursor, HICON Icon, LPCWSTR Name
 }
 
 void CloseNetworkThread() {
-	isServerEnabled = false;
-
 	if (NetworkThread != NULL) {
 		CloseHandle(NetworkThread);
 		NetworkThread = NULL;
@@ -167,18 +183,53 @@ void CloseNetworkThread() {
 }
 
 BOOL CreateConnection(HWND& hWnd, PARAMETERS& params) {
-	if (isServerEnabled) {
-		MessageBoxA(hWnd, "Server already running.", "Already running", MB_OK | MB_ICONWARNING);
-		return 1;
-	}
 	params.receivingData = new char[GEN_CHARS_STR_ROW_LEN * CHARS_STR_COL_LEN];
 
 	NetworkThread = CreateThread(NULL, 0, NetworkThreadDelegate, &params, 0, NULL);
 	return 0;
 }
 
+BOOL WriteToRegistry(const char* keyName, const char* valueName, char* valueData) {
+	HKEY hKey;
+	LONG result = RegCreateKeyExA(HKEY_CURRENT_USER, keyName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
+	if (result != ERROR_SUCCESS) {
+		MessageBoxA(NULL, "Error creating/opening registry key", "Registry error", MB_ICONERROR | MB_OK);
+		return 1;
+	}
+
+	result = RegSetValueExA(hKey, valueName, 0, REG_SZ, (BYTE*)valueData, strlen(valueData) + 1);
+	if (result != ERROR_SUCCESS) {
+		MessageBoxA(NULL, "Error writing to registry", "Registry error", MB_ICONERROR | MB_OK);
+		RegCloseKey(hKey);
+		return 1;
+	}
+
+	RegCloseKey(hKey);
+	return 0;
+}
+char* GetMaxNIndexes(int* count, int n) {
+	char* maxOccurrences = new char[n + 1];
+	for (int k = 0; k < n; ++k) {
+		int maxFrequency = 0, maxFrequencyIndex = 0;
+		char mostFrequentChar;
+		for (int i = 0; i < LENGTH_IN_ALPHABET; i++) {
+			if (count[i] > maxFrequency) {
+				maxFrequencyIndex = i;
+				maxFrequency = count[i];
+				maxOccurrences[k] = (char)('A' + i + ((i < LENGTH_IN_ALPHABET / 2) ? 0 : 6));
+			}
+		}
+		count[maxFrequencyIndex] = 0;
+	}
+	maxOccurrences[n] = '\0';
+	return maxOccurrences;
+}
+
 void ProcessReceivedData(HWND& hWnd, char* data) {
+	CloseNetworkThread();
 	MessageBoxA(NULL, data, "Received data", MB_ICONINFORMATION | MB_OK);
 	count = countCharInSequence(data);
-	
+  maxOccurrencesChars = GetMaxNIndexes(count, 5);
+	WriteToRegistry("Software\\OS_Lab", "topFive", maxOccurrencesChars);
+	count = countCharInSequence(data);
 }

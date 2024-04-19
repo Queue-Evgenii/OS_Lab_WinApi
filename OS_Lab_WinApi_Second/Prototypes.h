@@ -6,7 +6,8 @@ struct PARAMETERS
   char* receivingData;
 };
 
-void AddMainMenu(HWND hWnd);
+void AddMainInterface(HWND hWnd);
+void AddTCPInterface(HWND hWnd);
 
 BOOL CreateConnection(HWND& hWnd, PARAMETERS& params);
 void ProcessReceivedData(HWND& window, char* data);
