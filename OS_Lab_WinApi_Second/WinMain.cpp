@@ -53,11 +53,9 @@ void DrawGraph(HWND hWnd) {
 	int scaleX = (WND_WIDTH) / LENGTH_IN_ALPHABET;
 	int scaleY = (WND_HEIGHT) / 15; 
 
-	// Рисуем ось X
 	MoveToEx(hdc, offset, zoneHeight, nullptr);
 	LineTo(hdc, (WND_WIDTH), zoneHeight);
 
-	// Рисуем значения на оси X
 	for (int i = 0; i < LENGTH_IN_ALPHABET / 2; ++i) {
 		wchar_t letter = L'A' + i;
 		wchar_t str[2] = { letter, L'\0' };
@@ -69,7 +67,6 @@ void DrawGraph(HWND hWnd) {
 		TextOut(hdc, ((LENGTH_IN_ALPHABET / 2) + i) * scaleX + offset - 5, zoneHeight + 10, str, 2);
 	}
 
-	// Рисуем ось Y
 	MoveToEx(hdc, offset, 0, nullptr);
 	LineTo(hdc, offset, zoneHeight);
 
@@ -78,13 +75,11 @@ void DrawGraph(HWND hWnd) {
 		if (max < count[i]) max = count[i];
 	}
 
-	// Рисуем значения на оси Y
 	for (int i = 0; i <= max; ++i) {
 		std::wstring valueText = std::to_wstring(i);
 		TextOut(hdc, offset - 10, (zoneHeight) - i * scaleY, valueText.c_str(), valueText.length());
 	}
 
-	// Рисуем график
 	for (int i = 0; i < LENGTH_IN_ALPHABET - 1; ++i) {
 		MoveToEx(hdc, i * scaleX + offset, zoneHeight - count[i] * scaleY, nullptr);
 		LineTo(hdc, (i + 1) * scaleX + offset, zoneHeight - count[i + 1] * scaleY);
@@ -126,6 +121,7 @@ LRESULT CALLBACK MainProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 		}
 		if (wp == 'P' && GetKeyState(VK_CONTROL) < 0) {
 			DeleteDataFromRegistry();
+			MessageBoxA(hWnd, "Registry is cleaning", "Top five chars", MB_OK);
 		}
 		break;
 	case WM_PAINT:
@@ -147,6 +143,7 @@ LRESULT CALLBACK MainProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 			CreateConnection(hWnd, params);
 			break;
 		case ID_ROOT_MENU_ITEM_EXIT:
+			DeleteDataFromRegistry();
 			PostQuitMessage(0);
 			break;
 		default:
@@ -155,6 +152,7 @@ LRESULT CALLBACK MainProcedure(HWND hWnd, UINT msg, WPARAM wp, LPARAM lp) {
 		}
 		break;
 	case WM_DESTROY:
+		DeleteDataFromRegistry();
 		PostQuitMessage(0);
 		break;
 	default:

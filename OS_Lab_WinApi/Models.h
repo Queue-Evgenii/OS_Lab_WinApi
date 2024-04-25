@@ -6,8 +6,8 @@ struct PARAMETERS
   char* sendingData;
 };
 struct TextFields {
-  HWND defaultText;
-  HWND sortedText;
+  HWND& defaultText;
+  HWND& sortedText;
 };
 struct GeneratorParams
 {

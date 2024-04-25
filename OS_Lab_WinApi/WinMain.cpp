@@ -1,7 +1,7 @@
 #include "Definitions.h"
 
-HWND DefaultCharStrTextBox = NULL;
-HWND SortedCharStrTextBox = NULL;
+HWND DefaultCharStrTextBox;
+HWND SortedCharStrTextBox;
 char** strMatr = NULL;
 char* str = NULL;
 
