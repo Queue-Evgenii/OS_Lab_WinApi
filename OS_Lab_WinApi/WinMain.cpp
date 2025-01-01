@@ -8,8 +8,6 @@ char* str = NULL;
 HANDLE SubThread, NetworkThread;
 bool isServerEnabled = false;
 
-NOTIFYICONDATA nid;
-
 int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR args, int ncmdshow) {
 	WNDCLASS MainClass = NewWindowClass((HBRUSH)COLOR_WINDOW, LoadCursor(NULL, IDC_ARROW), LoadIcon(NULL, IDI_APPLICATION), L"MainClass", hInst, MainProcedure);
 
